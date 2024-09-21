@@ -1,25 +1,21 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react'
+import Home from './screens/Home'
+import Hello from './screens/Hello'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import Sidebar from './components/Sidebar';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+    <Sidebar/>
+    <div className={`flex-1 p-4`}>
+      <Routes>
+        <Route path="/" element={<Home/>} />
+        <Route path="/dashboard" element={<Hello/>} />
+      </Routes>
     </div>
-  );
+  </div>
+  )
 }
 
-export default App;
+export default App
