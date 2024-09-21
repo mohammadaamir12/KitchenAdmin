@@ -23,7 +23,7 @@ const Sidebar = ({ setIsAuth }) => {
             className={`fixed top-0 left-0 h-screen bg-purple-950 p-5 pt-8 z-50 transition-transform duration-300 ${open ? 'translate-x-0 w-15' : '-translate-x-full w-0'}`}
         >
             <BsArrowLeftShort
-                className={`absolute cursor-pointer rounded-full ${!open ? "-right-10" : "-right-2"} md:top-9 top-4 w-7 h-7 border-2 border-purple-900 bg-white ${!open && 'rotate-180'}`}
+                className={`absolute cursor-pointer rounded-full ${!open ? "-right-10" : "-right-4"} md:top-9 top-4 w-7 h-7 border-2 border-purple-900 bg-white ${!open && 'rotate-180'}`}
                 onClick={() => setOpen(!open)}
             />
             {/* Menu lists showing sidebar */}
