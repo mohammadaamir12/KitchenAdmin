@@ -28,9 +28,11 @@ export default function Home() {
   const [females, setFemales] = useState('')
   const [daily, setDaily] = useState('')
   const [week, setWeek] = useState('')
+  const [prevWeek, setPrevWeek] = useState('')
   const [month, setMonth] = useState('')
+  const [prevMonth, setPrevMonth] = useState('')
   const [yesterday, setyesterday] = useState('')
-  const [peakHourData,setpeakHourData]=useState([])
+  const [peakHourData, setpeakHourData] = useState([])
 
   useEffect(() => {
     setEnd(moment().format('DD-MM-YYYY'));
@@ -42,13 +44,16 @@ export default function Home() {
     getmaleandwomendata();
     allGender();
     allGenderVisitor();
-  }, [kidandold, females, childs, seriesData, start, end]);
+  }, [kidandold, females, childs, seriesData, start, end, males]);
 
   useEffect(() => {
     DailyVisit();
     weekVisit();
     monthVisit();
     yesterdayVisit();
+    prevMonthVisit()
+    prevWeekVisit()
+    peakHour()
   }, [daily, week, month, yesterday]);
   const getmaleandwomendata = () => {
     const startdate = start.toString()
@@ -116,7 +121,7 @@ export default function Home() {
 
         response.data.forEach(data => {
           const day = new Date(data.visitDate).getUTCDate();
-          newseriesData[day - 1] += data.totalCount;
+          newseriesData[day - 1] += data.uniqueCount;
         });
         setSeriesData(newseriesData)
       })
@@ -128,7 +133,7 @@ export default function Home() {
   const oldandkid = () => {
     const startdate = start.toString()
     const endDate = end.toString()
-    console.log('allll',startdate,endDate);
+    console.log('allll', startdate, endDate);
     const params = {
       api_name: 'adult_kids_count',
       branch_id: 3,
@@ -164,7 +169,7 @@ export default function Home() {
     axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params })
       .then(response => {
         // console.log('Data:dffdf', response.data);
-        const totalSum = response.data.reduce((accumulator, visit) => accumulator + visit.totalCount, 0);
+        const totalSum = response.data.reduce((accumulator, visit) => accumulator + visit.uniqueCount, 0);
 
         const num = totalSum.toString()
 
@@ -180,12 +185,14 @@ export default function Home() {
     const currentDate = new Date();
     const endDate = currentDate.toISOString().split('T')[0];
     const mainEndDate = endDate.toString()
-
-    // Get date one week before
     const startDate = new Date(currentDate);
-    startDate.setDate(currentDate.getDate() - 7);
+    const dayOfWeek = currentDate.getDay();
+    const daysSinceMonday = (dayOfWeek + 6) % 7;
+    startDate.setDate(currentDate.getDate() - daysSinceMonday);
     const formattedStartDate = startDate.toISOString().split('T')[0];
     const mainStartDate = formattedStartDate.toString()
+
+    // console.log('asgasgsgasgags',formattedStartDate,endDate);
     const params = {
       api_name: 'unique_head_count',
       branch_id: 3,
@@ -197,7 +204,7 @@ export default function Home() {
     axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params })
       .then(response => {
         // console.log('Data:', response.data);
-        const totalSum = response.data.reduce((accumulator, visit) => accumulator + visit.totalCount, 0);
+        const totalSum = response.data.reduce((accumulator, visit) => accumulator + visit.uniqueCount, 0);
 
         const num = totalSum.toString()
 
@@ -212,13 +219,13 @@ export default function Home() {
   const monthVisit = () => {
     const currentDate = new Date();
     const endDate = currentDate.toISOString().split('T')[0];
-    const mainEndDate = endDate.toString()
+    const mainEndDate = endDate.toString();
 
-    // Get date one month before
-    const startDate = new Date(currentDate);
-    startDate.setDate(currentDate.getDate() - 30);
+    // Set start date to the first day of the current month
+    const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const formattedStartDate = startDate.toISOString().split('T')[0];
-    const mainStartDate = formattedStartDate.toString()
+    const mainStartDate = formattedStartDate.toString();
+    // console.log('asgasgsgasgags',formattedStartDate,endDate);
     const params = {
       api_name: 'unique_head_count',
       branch_id: 3,
@@ -230,11 +237,94 @@ export default function Home() {
     axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params })
       .then(response => {
         // console.log('Data:', response.data);
-        const totalSum = response.data.reduce((accumulator, visit) => accumulator + visit.totalCount, 0);
+        const totalSum = response.data.reduce((accumulator, visit) => accumulator + visit.uniqueCount, 0);
 
         const num = totalSum.toString()
 
         setMonth(num)
+      })
+      .catch(error => {
+
+        console.error('Error:', error);
+      });
+  }
+
+  const prevMonthVisit = () => {
+    const currentDate = new Date();
+
+// Calculate the first day of the current month
+const firstDayOfCurrentMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+
+// Calculate the last day of the previous month
+const lastDayOfPreviousMonth = new Date(firstDayOfCurrentMonth - 1);
+const endDate = lastDayOfPreviousMonth.toISOString().split('T')[0]; 
+const mainEndDate = endDate.toString();
+// Calculate the first day of the previous month
+const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+const formattedStartDate = startDate.toISOString().split('T')[0]; 
+const mainStartDate = formattedStartDate.toString();
+
+    console.log('asgasgsgasgags',formattedStartDate,endDate);
+    const params = {
+      api_name: 'unique_head_count',
+      branch_id: 3,
+      start_date: mainStartDate,
+      end_date: mainEndDate
+    };
+
+
+    axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params })
+      .then(response => {
+        // console.log('Data:', response.data);
+        const totalSum = response.data.reduce((accumulator, visit) => accumulator + visit.uniqueCount, 0);
+
+        const num = totalSum.toString()
+        setPrevMonth(num)
+       
+      })
+      .catch(error => {
+
+        console.error('Error:', error);
+      });
+  }
+  const prevWeekVisit = () => {
+    const currentDate = new Date();
+
+    // Get the current day of the week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+    const dayOfWeek = currentDate.getDay();
+    
+    const daysSinceLastMonday = dayOfWeek + 6; 
+    
+    // Get the previous Monday date
+    const previousMonday = new Date(currentDate);
+    previousMonday.setDate(currentDate.getDate() - daysSinceLastMonday);
+    
+    // Get the previous Sunday date
+    const previousSunday = new Date(previousMonday);
+    previousSunday.setDate(previousMonday.getDate() + 6); 
+    
+    const formattedStartDate = previousMonday.toISOString().split('T')[0]; 
+    const formattedEndDate = previousSunday.toISOString().split('T')[0];
+    const mainEndDate = formattedEndDate.toString();
+const mainStartDate = formattedStartDate.toString();
+
+    console.log('asgasgsgasgags',formattedStartDate,mainEndDate);
+    const params = {
+      api_name: 'unique_head_count',
+      branch_id: 3,
+      start_date: mainStartDate,
+      end_date: mainEndDate
+    };
+
+
+    axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params })
+      .then(response => {
+        // console.log('Data:', response.data);
+        const totalSum = response.data.reduce((accumulator, visit) => accumulator + visit.uniqueCount, 0);
+
+        const num = totalSum.toString()
+        setPrevWeek(num)
+       
       })
       .catch(error => {
 
@@ -254,14 +344,14 @@ export default function Home() {
       api_name: 'unique_head_count',
       branch_id: 3,
       start_date: mainStartDate,
-      end_date: mainEndDate
+      end_date: mainStartDate
     };
 
 
     axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params })
       .then(response => {
         // console.log('Data:', response.data);
-        const totalSum = response.data.reduce((accumulator, visit) => accumulator + visit.totalCount, 0);
+        const totalSum = response.data.reduce((accumulator, visit) => accumulator + visit.uniqueCount, 0);
         const num = totalSum.toString();
         setyesterday(num)
       })
@@ -269,7 +359,7 @@ export default function Home() {
         console.error('Error:', error);
       });
   }
-  
+
   const peakHour = () => {
     const currentDate = new Date();
     const endDate = currentDate.toISOString().split('T')[0];
@@ -290,35 +380,35 @@ export default function Home() {
     axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params })
       .then(response => {
         console.log('Data:', response.data);
-        const transformedData =response.data.map(item => ({
+        const transformedData = response.data.map(item => ({
           visitHour: item.visitHour,
-          totalUniqueCount: item.totalCount + item.uniqueCount
-      }));
-      //   const transformedData = response.data.map((dayData, dayIndex) => ({
-      //     day: dayData.day,
-      //     progress: dayData.progress.map((value, hourIndex) => (
-      //         hourIndex < totalCounts.length ? totalCounts[hourIndex] : 0
-      //     )),
-      // }));
-      console.log('after',transformedData);
-      setpeakHourData(transformedData)
-  
+          totalUniqueCount: item.totalCount
+        }));
+        //   const transformedData = response.data.map((dayData, dayIndex) => ({
+        //     day: dayData.day,
+        //     progress: dayData.progress.map((value, hourIndex) => (
+        //         hourIndex < totalCounts.length ? totalCounts[hourIndex] : 0
+        //     )),
+        // }));
+        console.log('after', transformedData);
+        setpeakHourData(transformedData)
+
       })
       .catch(error => {
         console.error('Error:', error);
       });
   }
-  peakHour()
 
-  const weekData = [
-    { day: "Monday", progress: [10, 20, 30, 0, 50, 10, 15, 20, 25, 10, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
-    { day: "Tuesday", progress: [20, 30, 10, 40, 50, 60, 70, 80, 90, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 5, 0, 0, 0, 0] },
-    { day: "Wednesday", progress: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 70, 80, 90, 100, 90, 80, 70, 60, 50, 40, 30, 20] },
-    { day: "Thursday", progress: [10, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
-    { day: "Friday", progress: [50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50] },
-    { day: "Saturday", progress: [30, 40, 20, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
-    { day: "Sunday", progress: [15, 25, 35, 45, 55, 65, 75, 85, 95, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 5, 0, 0, 0, 0] },
-  ];
+
+  // const weekData = [
+  //   { day: "Monday", progress: [10, 20, 30, 0, 50, 10, 15, 20, 25, 10, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+  //   { day: "Tuesday", progress: [20, 30, 10, 40, 50, 60, 70, 80, 90, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 5, 0, 0, 0, 0] },
+  //   { day: "Wednesday", progress: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 70, 80, 90, 100, 90, 80, 70, 60, 50, 40, 30, 20] },
+  //   { day: "Thursday", progress: [10, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+  //   { day: "Friday", progress: [50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50] },
+  //   { day: "Saturday", progress: [30, 40, 20, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+  //   { day: "Sunday", progress: [15, 25, 35, 45, 55, 65, 75, 85, 95, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 5, 0, 0, 0, 0] },
+  // ];
 
 
   return (
@@ -370,10 +460,10 @@ export default function Home() {
             <TrafficSection trafficNumber={yesterday} percentChange="-0.6" name='Yesterday' />
           </div>
           <div className="flex-1">
-            <TrafficSection trafficNumber={week} percentChange="2.3" name='Weekly' />
+            <TrafficSection trafficNumber={prevWeek} percentChange="2.3" name='Weekly' />
           </div>
           <div className="flex-1">
-            <TrafficSection trafficNumber={month} percentChange="-10.0" name='Monthly' />
+            <TrafficSection trafficNumber={prevMonth} percentChange="-10.0" name='Monthly' />
           </div>
         </div>
       </div>
