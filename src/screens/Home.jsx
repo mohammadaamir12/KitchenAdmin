@@ -38,368 +38,292 @@ export default function Home() {
     setEnd(moment().format('DD-MM-YYYY'));
     setStart(moment().subtract(1, 'day').format('DD-MM-YYYY'));
   }, []);
-  // console.log('ppppppp',start,end);
+  console.log('ppppppp',start,end);
+  
   useEffect(() => {
-    oldandkid();
-    getmaleandwomendata();
-    allGender();
-    allGenderVisitor();
-  }, [kidandold, females, childs, seriesData, start, end, males]);
-
+      const fetchData = async () => {
+          await oldandkid();
+          await getmaleandwomendata();
+          await allGender();
+          await allGenderVisitor();
+      };
+      fetchData();
+  }, [kidandold, females, childs, seriesData, males,dates]);
+  
   useEffect(() => {
-    DailyVisit();
-    weekVisit();
-    monthVisit();
-    yesterdayVisit();
-    prevMonthVisit()
-    prevWeekVisit()
-    peakHour()
+      const fetchVisits = async () => {
+          await DailyVisit();
+          await weekVisit();
+          await monthVisit();
+          await yesterdayVisit();
+          await prevMonthVisit();
+          await prevWeekVisit();
+          await peakHour();
+      };
+      fetchVisits();
   }, [daily, week, month, yesterday]);
-  const getmaleandwomendata = () => {
-    const startdate = start.toString()
-    const endDate = end.toString()
-    const params = {
-
-      api_name: 'gender_count',
-      branch_id: 3,
-      start_date: startdate,
-      end_date: endDate
-    };
-
-    axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params })
-      .then(response => {
-        setFemales(response.data[0].count)
-        setMales(response.data[1].count)
-        // console.log('Data:', response.data);
-      })
-      .catch(error => {
-
-        console.error('Error:', error);
-      });
-  }
-
-  const allGender = () => {
-    const startdate = start.toString()
-    const endDate = end.toString()
-    const params = {
-      api_name: 'age_group_count',
-      branch_id: 3,
-      start_date: startdate,
-      end_date: endDate
-    };
-
-
-    axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params })
-      .then(response => {
-        // console.log('Data:', response.data);
-        setchilds(response.data[3].count)
-        setMans(response.data[0].count)
-        setolds(response.data[1].count)
-        setelders(response.data[2].count)
-      })
-      .catch(error => {
-
-        console.error('Error:', error);
-      });
-  }
-
-  const allGenderVisitor = () => {
-    const startdate = start.toString()
-    const endDate = end.toString()
-    const params = {
-      api_name: 'unique_head_count',
-      branch_id: 3,
-      start_date: startdate,
-      end_date: endDate
-    };
-
-    axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params })
-      .then(response => {
-        // console.log('Data:', response.data);
-        const newseriesData = new Array(30).fill(0);
-
-
-        response.data.forEach(data => {
-          const day = new Date(data.visitDate).getUTCDate();
-          newseriesData[day - 1] += data.uniqueCount;
-        });
-        setSeriesData(newseriesData)
-      })
-      .catch(error => {
-
-        console.error('Error:', error);
-      });
-  }
-  const oldandkid = () => {
-    const startdate = start.toString()
-    const endDate = end.toString()
-    console.log('allll', startdate, endDate);
-    const params = {
-      api_name: 'adult_kids_count',
-      branch_id: 3,
-      start_date: startdate,
-      end_date: endDate
-    };
-
-
-    axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params })
-      .then(response => {
-        console.log('Data:', response.data);
-        setKidandold(response.data[1].count)
-        setKidandold1(response.data[0].count)
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
-  }
-
-  const DailyVisit = () => {
-    const currentDate = new Date();
-    const endDate = currentDate.toISOString().split('T')[0];
-    const mainDate = endDate.toString()
-    // console.log('check',endDate); 
-    const params = {
-      api_name: 'unique_head_count',
-      branch_id: 3,
-      start_date: mainDate,
-      end_date: mainDate
-    };
-
-
-    axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params })
-      .then(response => {
-        // console.log('Data:dffdf', response.data);
-        const totalSum = response.data.reduce((accumulator, visit) => accumulator + visit.uniqueCount, 0);
-
-        const num = totalSum.toString()
-
-        setDaily(num)
-      })
-      .catch(error => {
-
-        console.error('Error:', error);
-      });
-  }
-
-  const weekVisit = () => {
-    const currentDate = new Date();
-    const endDate = currentDate.toISOString().split('T')[0];
-    const mainEndDate = endDate.toString()
-    const startDate = new Date(currentDate);
-    const dayOfWeek = currentDate.getDay();
-    const daysSinceMonday = (dayOfWeek + 6) % 7;
-    startDate.setDate(currentDate.getDate() - daysSinceMonday);
-    const formattedStartDate = startDate.toISOString().split('T')[0];
-    const mainStartDate = formattedStartDate.toString()
-
-    // console.log('asgasgsgasgags',formattedStartDate,endDate);
-    const params = {
-      api_name: 'unique_head_count',
-      branch_id: 3,
-      start_date: mainStartDate,
-      end_date: mainEndDate
-    };
-
-
-    axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params })
-      .then(response => {
-        // console.log('Data:', response.data);
-        const totalSum = response.data.reduce((accumulator, visit) => accumulator + visit.uniqueCount, 0);
-
-        const num = totalSum.toString()
-
-        setWeek(num)
-      })
-      .catch(error => {
-
-        console.error('Error:', error);
-      });
-  }
-
-  const monthVisit = () => {
-    const currentDate = new Date();
-    const endDate = currentDate.toISOString().split('T')[0];
-    const mainEndDate = endDate.toString();
-
-    // Set start date to the first day of the current month
-    const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    const formattedStartDate = startDate.toISOString().split('T')[0];
-    const mainStartDate = formattedStartDate.toString();
-    // console.log('asgasgsgasgags',formattedStartDate,endDate);
-    const params = {
-      api_name: 'unique_head_count',
-      branch_id: 3,
-      start_date: mainStartDate,
-      end_date: mainEndDate
-    };
-
-
-    axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params })
-      .then(response => {
-        // console.log('Data:', response.data);
-        const totalSum = response.data.reduce((accumulator, visit) => accumulator + visit.uniqueCount, 0);
-
-        const num = totalSum.toString()
-
-        setMonth(num)
-      })
-      .catch(error => {
-
-        console.error('Error:', error);
-      });
-  }
-
-  const prevMonthVisit = () => {
-    const currentDate = new Date();
-
-// Calculate the first day of the current month
-const firstDayOfCurrentMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-
-// Calculate the last day of the previous month
-const lastDayOfPreviousMonth = new Date(firstDayOfCurrentMonth - 1);
-const endDate = lastDayOfPreviousMonth.toISOString().split('T')[0]; 
-const mainEndDate = endDate.toString();
-// Calculate the first day of the previous month
-const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
-const formattedStartDate = startDate.toISOString().split('T')[0]; 
-const mainStartDate = formattedStartDate.toString();
-
-    console.log('asgasgsgasgags',formattedStartDate,endDate);
-    const params = {
-      api_name: 'unique_head_count',
-      branch_id: 3,
-      start_date: mainStartDate,
-      end_date: mainEndDate
-    };
-
-
-    axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params })
-      .then(response => {
-        // console.log('Data:', response.data);
-        const totalSum = response.data.reduce((accumulator, visit) => accumulator + visit.uniqueCount, 0);
-
-        const num = totalSum.toString()
-        setPrevMonth(num)
-       
-      })
-      .catch(error => {
-
-        console.error('Error:', error);
-      });
-  }
-  const prevWeekVisit = () => {
-    const currentDate = new Date();
-
-    // Get the current day of the week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
-    const dayOfWeek = currentDate.getDay();
+  
+  const getmaleandwomendata = async () => {
+      // const startdate = start.toString();
+      // const endDate = end.toString();
+      console.log('sdsdsdssdsdsdsdsdsd',dates);
+      const params = {
+          api_name: 'gender_count',
+          branch_id: 3,
+          start_date: dates[0],
+          end_date: dates[1],
+      };
+  
+      try {
+          const response = await axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params });
+          setFemales(response.data[0].count);
+          setMales(response.data[1].count);
+          console.log('sds',response.data);
+      } catch (error) {
+          console.error('Error:', error);
+      }
+  };
+  
+  const allGender = async () => {
+      // const startdate = start.toString();
+      // const endDate = end.toString();
+      const params = {
+          api_name: 'age_group_count',
+          branch_id: 3,
+          start_date: dates[0],
+          end_date: dates[1],
+      };
+  
+      try {
+          const response = await axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params });
+          setchilds(response.data[3].count);
+          setMans(response.data[0].count);
+          setolds(response.data[1].count);
+          setelders(response.data[2].count);
+      } catch (error) {
+          console.error('Error:', error);
+      }
+  };
+  
+  const allGenderVisitor = async () => {
+      // const startdate = start.toString();
+      // const endDate = end.toString();
+      const params = {
+          api_name: 'unique_head_count',
+          branch_id: 3,
+          start_date: dates[0],
+          end_date: dates[1],
+      };
+  
+      try {
+          const response = await axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params });
+          const newseriesData = new Array(30).fill(0);
+  
+          response.data.forEach(data => {
+              const day = new Date(data.visitDate).getUTCDate();
+              newseriesData[day - 1] += data.uniqueCount;
+          });
+          setSeriesData(newseriesData);
+      } catch (error) {
+          console.error('Error:', error);
+      }
+  };
+  
+  const oldandkid = async () => {
+    console.log('love',start,end);
+    console.log('lovellll',dates[1],dates[0]);
+      const startdate = start.toString();
+      const endDate = end.toString();
+      const start_date = dates[0] || startdate;
+    const end_date = dates[1] || endDate;
+      const params = {
+          api_name: 'adult_kids_count',
+          branch_id: 3,
+          start_date: start_date ,
+          end_date: end_date  ,
+      };
+  
+      try {
+          const response = await axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params });
+          setKidandold(response.data[1].count);
+          setKidandold1(response.data[0].count);
+      } catch (error) {
+          console.error('Error:', error);
+      }
+  };
+  
+  const DailyVisit = async () => {
+      const currentDate = new Date();
+      const endDate = currentDate.toISOString().split('T')[0];
+      const params = {
+          api_name: 'unique_head_count',
+          branch_id: 3,
+          start_date: endDate,
+          end_date: endDate,
+      };
+  
+      try {
+          const response = await axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params });
+          const totalSum = response.data.reduce((accumulator, visit) => accumulator + visit.uniqueCount, 0);
+          setDaily(totalSum.toString());
+      } catch (error) {
+          console.error('Error:', error);
+      }
+  };
+  
+  const weekVisit = async () => {
+      const currentDate = new Date();
+      const endDate = currentDate.toISOString().split('T')[0];
+      const startDate = new Date(currentDate);
+      const dayOfWeek = currentDate.getDay();
+      const daysSinceMonday = (dayOfWeek + 6) % 7;
+      startDate.setDate(currentDate.getDate() - daysSinceMonday);
+      const formattedStartDate = startDate.toISOString().split('T')[0];
+  
+      const params = {
+          api_name: 'unique_head_count',
+          branch_id: 3,
+          start_date: formattedStartDate,
+          end_date: endDate,
+      };
+  
+      try {
+          const response = await axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params });
+          const totalSum = response.data.reduce((accumulator, visit) => accumulator + visit.uniqueCount, 0);
+          setWeek(totalSum.toString());
+      } catch (error) {
+          console.error('Error:', error);
+      }
+  };
+  
+  const monthVisit = async () => {
+      const currentDate = new Date();
+      const endDate = currentDate.toISOString().split('T')[0];
+      const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const formattedStartDate = startDate.toISOString().split('T')[0];
+  
+      const params = {
+          api_name: 'unique_head_count',
+          branch_id: 3,
+          start_date: formattedStartDate,
+          end_date: endDate,
+      };
+  
+      try {
+          const response = await axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params });
+          const totalSum = response.data.reduce((accumulator, visit) => accumulator + visit.uniqueCount, 0);
+          setMonth(totalSum.toString());
+          console.log('month',response.data);
+      } catch (error) {
+          console.error('Error:', error);
+      }
+  };
+  
+  const prevMonthVisit = async () => {
+      const currentDate = new Date();
+      const firstDayOfCurrentMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const lastDayOfPreviousMonth = new Date(firstDayOfCurrentMonth - 1);
+      const endDate = lastDayOfPreviousMonth.toISOString().split('T')[0];
+      const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+      const formattedStartDate = startDate.toISOString().split('T')[0];
+  
+      const params = {
+          api_name: 'unique_head_count',
+          branch_id: 3,
+          start_date: formattedStartDate,
+          end_date: endDate,
+      };
+  
+      try {
+          const response = await axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params });
+          const totalSum = response.data.reduce((accumulator, visit) => accumulator + visit.uniqueCount, 0);
+          setPrevMonth(totalSum.toString());
+      } catch (error) {
+          console.error('Error:', error);
+      }
+  };
+  
+  const prevWeekVisit = async () => {
+      const currentDate = new Date();
+      const dayOfWeek = currentDate.getDay();
+      const daysSinceLastMonday = dayOfWeek + 6;
+      const previousMonday = new Date(currentDate);
+      previousMonday.setDate(currentDate.getDate() - daysSinceLastMonday);
+      const previousSunday = new Date(previousMonday);
+      previousSunday.setDate(previousMonday.getDate() + 6);
+      const formattedStartDate = previousMonday.toISOString().split('T')[0];
+      const formattedEndDate = previousSunday.toISOString().split('T')[0];
+  
+      const params = {
+          api_name: 'unique_head_count',
+          branch_id: 3,
+          start_date: formattedStartDate,
+          end_date: formattedEndDate,
+      };
+  
+      try {
+          const response = await axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params });
+          const totalSum = response.data.reduce((accumulator, visit) => accumulator + visit.uniqueCount, 0);
+          setPrevWeek(totalSum.toString());
+      } catch (error) {
+          console.error('Error:', error);
+      }
+  };
+  
+  const yesterdayVisit = async () => {
+      const currentDate = new Date();
+      const endDate = currentDate.toISOString().split('T')[0];
+      const startDate = new Date(currentDate);
+      startDate.setDate(currentDate.getDate() - 1);
+      const formattedStartDate = startDate.toISOString().split('T')[0];
+  
+      const params = {
+          api_name: 'unique_head_count',
+          branch_id: 3,
+          start_date: formattedStartDate,
+          end_date: formattedStartDate,
+      };
+  
+      try {
+          const response = await axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params });
+          const totalSum = response.data.reduce((accumulator, visit) => accumulator + visit.uniqueCount, 0);
+          setyesterday(totalSum.toString());
+      } catch (error) {
+          console.error('Error:', error);
+      }
+  };
+  
+  const peakHour = async () => {
+      const currentDate = new Date();
+      const endDate = currentDate.toISOString().split('T')[0];
+      const startDate = new Date(currentDate);
+      startDate.setDate(currentDate.getDate() - 1);
+      const formattedStartDate = startDate.toISOString().split('T')[0];
+  
+      const params = {
+          api_name: 'peak_hours',
+          branch_id: 3,
+          start_date: formattedStartDate,
+          end_date: endDate,
+      };
+  
+      try {
+          const response = await axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params });
+          const transformedData = response.data.map(item => ({
+              visitHour: item.visitHour,
+              totalUniqueCount: item.totalCount,
+          }));
+          setpeakHourData(transformedData);
+      } catch (error) {
+          console.error('Error:', error);
+      }
+  };
+   const setAllDates=()=>{
+    console.log('ttt',dates);
     
-    const daysSinceLastMonday = dayOfWeek + 6; 
-    
-    // Get the previous Monday date
-    const previousMonday = new Date(currentDate);
-    previousMonday.setDate(currentDate.getDate() - daysSinceLastMonday);
-    
-    // Get the previous Sunday date
-    const previousSunday = new Date(previousMonday);
-    previousSunday.setDate(previousMonday.getDate() + 6); 
-    
-    const formattedStartDate = previousMonday.toISOString().split('T')[0]; 
-    const formattedEndDate = previousSunday.toISOString().split('T')[0];
-    const mainEndDate = formattedEndDate.toString();
-const mainStartDate = formattedStartDate.toString();
-
-    console.log('asgasgsgasgags',formattedStartDate,mainEndDate);
-    const params = {
-      api_name: 'unique_head_count',
-      branch_id: 3,
-      start_date: mainStartDate,
-      end_date: mainEndDate
-    };
-
-
-    axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params })
-      .then(response => {
-        // console.log('Data:', response.data);
-        const totalSum = response.data.reduce((accumulator, visit) => accumulator + visit.uniqueCount, 0);
-
-        const num = totalSum.toString()
-        setPrevWeek(num)
-       
-      })
-      .catch(error => {
-
-        console.error('Error:', error);
-      });
   }
-  const yesterdayVisit = () => {
-    const currentDate = new Date();
-    const endDate = currentDate.toISOString().split('T')[0];
-    const mainEndDate = endDate.toString()
-
-    const startDate = new Date(currentDate);
-    startDate.setDate(currentDate.getDate() - 1);
-    const formattedStartDate = startDate.toISOString().split('T')[0];
-    const mainStartDate = formattedStartDate.toString()
-    const params = {
-      api_name: 'unique_head_count',
-      branch_id: 3,
-      start_date: mainStartDate,
-      end_date: mainStartDate
-    };
-
-
-    axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params })
-      .then(response => {
-        // console.log('Data:', response.data);
-        const totalSum = response.data.reduce((accumulator, visit) => accumulator + visit.uniqueCount, 0);
-        const num = totalSum.toString();
-        setyesterday(num)
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
-  }
-
-  const peakHour = () => {
-    const currentDate = new Date();
-    const endDate = currentDate.toISOString().split('T')[0];
-    const mainEndDate = endDate.toString()
-
-    const startDate = new Date(currentDate);
-    startDate.setDate(currentDate.getDate() - 1);
-    const formattedStartDate = startDate.toISOString().split('T')[0];
-    const mainStartDate = formattedStartDate.toString()
-    const params = {
-      api_name: 'peak_hours',
-      branch_id: 3,
-      start_date: mainStartDate,
-      end_date: mainEndDate
-    };
-
-
-    axios.get('https://br42legudi.execute-api.ap-south-1.amazonaws.com/default/lambda-batch-process-dashboard', { params })
-      .then(response => {
-        console.log('Data:', response.data);
-        const transformedData = response.data.map(item => ({
-          visitHour: item.visitHour,
-          totalUniqueCount: item.totalCount
-        }));
-        //   const transformedData = response.data.map((dayData, dayIndex) => ({
-        //     day: dayData.day,
-        //     progress: dayData.progress.map((value, hourIndex) => (
-        //         hourIndex < totalCounts.length ? totalCounts[hourIndex] : 0
-        //     )),
-        // }));
-        console.log('after', transformedData);
-        setpeakHourData(transformedData)
-
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
-  }
-
-
+  
+console.log('dateee',dates);
   // const weekData = [
   //   { day: "Monday", progress: [10, 20, 30, 0, 50, 10, 15, 20, 25, 10, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
   //   { day: "Tuesday", progress: [20, 30, 10, 40, 50, 60, 70, 80, 90, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 5, 0, 0, 0, 0] },
@@ -410,7 +334,20 @@ const mainStartDate = formattedStartDate.toString();
   //   { day: "Sunday", progress: [15, 25, 35, 45, 55, 65, 75, 85, 95, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 5, 0, 0, 0, 0] },
   // ];
 
+  const handleDateChange = (values) => {
+    
+  
+    const date1 = new Date(values[0]);
+const date2 = new Date(values[1]);
 
+// Format the dates
+const formattedDate1 = moment(date1).format('DD-MM-YYYY');
+const formattedDate2 = moment(date2).format('DD-MM-YYYY');
+setDates([formattedDate1, formattedDate2]);
+setStart(dates[0])
+  };
+
+ 
   return (
     <div>
       {/* filter section */}
@@ -419,13 +356,7 @@ const mainStartDate = formattedStartDate.toString();
           Filter
         </div>
         <RangePicker
-          onChange={(value) => {
-            if (value && value.length) {
-              setDates(value.map(item => moment(item).format('DD-MM-YYYY')));
-            } else {
-              setDates([]);
-            }
-          }}
+          onChange={handleDateChange}
         />
       </div>
 
